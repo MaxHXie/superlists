@@ -28,3 +28,11 @@ if __name__ == '__main__':
 
     #setUp and tearDown are special methods which get run before and after each testselfself.
     #tearDown will run even if there is an error in the test. So, no more firefox windows lying around!
+
+# Man vet inte om de gjort fel, fuskbygge etc.
+
+# Work progress:
+# 1. Write a functional test
+# 2. Write unit test
+# 3. Write application code and solve the unittests
+# 4. Rerun functional tests to see if they pass
