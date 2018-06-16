@@ -17,10 +17,20 @@ class HomePageTest(TestCase):
 
         # Also: Keep refactoring and functionality changes entirely separate!
 
+    #Each unit test should not be too long. If it is and you notice that it is testing more
+    #than one thing. Divide it up and write multiple, separate unittests!!
+
     def test_can_save_a_POST_request(self):
+        self.client.post('/', data={'item_text': 'A new list item'})
+
+        self.assertEqual(Item.objects.count(), 1)
+        new_item = Item.objects.first()
+        self.assertEqual(new_item.text, 'A new list item')
+
+    def test_redirects_after_POST(self):
         response = self.client.post('/', data={'item_text': 'A new list item'})
-        self.assertIn('A new list item', response.content.decode())
-        self.assertTemplateUsed(response, 'home.html')
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response['location'], '/')
 
     def test_saving_and_retrieving(self):
             first_item = Item()
@@ -36,5 +46,21 @@ class HomePageTest(TestCase):
 
             first_saved_item = saved_items[0]
             second_saved_item = saved_items[1]
-            self.assertEqual(first_saved_item, "The first (ever) list item")
-            self.assertEqual(second_saved_item, "Item the second")
+            self.assertEqual(first_saved_item.text, "The first (ever) list item")
+            self.assertEqual(second_saved_item.text, "Item the second")
+
+    def test_only_saves_when_necessary(self):
+        self.client.get('/')
+        self.assertEqual(Item.objects.count(), 0)
+
+    def test_displays_all_list_items(self):
+        #Create 2 list item instances and put them in the database
+        Item.objects.create(text='itemey 1')
+        Item.objects.create(text='itemey 2')
+
+        # Retrieve the response from '/' path
+        response = self.client.get('/')
+
+        #Read it and test if "itemey 1" and "itemey 2" are in there.
+        self.assertIn('itemey 1', response.content.decode())
+        self.assertIn('itemey 2', response.content.decode())
