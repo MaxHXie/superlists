@@ -49,7 +49,6 @@ class NewVisitorTest(unittest.TestCase):
 
         #The page updates again, and now shows both items on her list
 
-
         # 1. We are using several of the methods that Selenium provides to examine web pages
         #find_element_by_tag_name, find_element_by_id and find_elements_by_tag_name (notice the extra s,
         #which means it will return several elements rather than just one.)
