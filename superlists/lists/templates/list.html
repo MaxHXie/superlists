@@ -4,18 +4,24 @@
   </head>
   <body>
     <h1>Your To-Do list</h1>
-    <form method="POST" action="lists/new">
+    <!-- There is our new form action -->
+    <form method="POST" action="/lists/{{ list.id }}/add_item">
       <input id="id_new_item" name="item_text" placeholder="Enter a to-do item">
       {% csrf_token %}
     </form>
       <table id="id_list_table">
-        {% for item in items %}
+        <!--
+        .item_set is called a reverse lookup. It's one of Django's incredible useful bits of ORM
+        that lets you look up an object's related items from a different table...
+
+        Item -> text, list
+        List -> None
+
+        list.item_set.all -> get a list of all items that "has" this list
+        -->
+        {% for item in list.item_set.all %}
           <tr><td>{{ forloop.counter }}: {{ item.text }}</tr></td>
         {% endfor %}
       </table>
   </body>
 </html>
-
-Biting the bullet: Adjusting our models
-Enough housekeeping with our URLs. It's time to bite the bullet and change our models. Let's
-adjust the model unit test. Just for a change, I'll present the changes in the for of a diff:

@@ -14,7 +14,7 @@ always get our models code right on the first go. But if you delete a migration 
 been applied to a database somewhere, Django will be confused about what state it's in,
 and how to apply future migrations.
 
-You should only do it when you're sure the migration hasn't been used. 
+You should only do it when you're sure the migration hasn't been used.
 
 A good rule of thumb is that you should never delete or modify a migration
 that's already been committed to your VCS.
