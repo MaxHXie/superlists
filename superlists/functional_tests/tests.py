@@ -134,3 +134,12 @@ class NewVisitorTest(LiveServerTestCase):
         self.assertIn('Buy milk', page_text)
 
         #Satisfied, they both fo to sleep
+
+'''
+Where are we with our own to-do list?
+    - Adjust model so that items are associated with different lists.
+    - Add unique URLS for each list...
+    - Add a URL for creating a new list via POST
+    - Add URLs for adding a new item to an existing list via POST
+    - Last step until we get an MVP
+'''
