@@ -98,6 +98,14 @@ class NewVisitorTest(LiveServerTestCase):
 
         #Now a new user, Francis, comes along to the site.
 
+        '''
+        I am using the convention of double hashes (##) to indicate "meta-comments" -
+        comments about how the test is working and why - so that we can distinguich them
+        from regular comments in FTs which explain the User Story. They're a message to our
+        future selves, which might otherwise be wondering why the heck we're quitting the browser
+        and starting a new one...
+        '''
+
         ##We use a new browser to make sure that no information
         ##of Edith's is coming through from cookies etc
         self.browser.quit()
