@@ -1,27 +1,10 @@
-<html>
-  <head>
-    <title>To-Do lists</title>
-  </head>
-  <body>
-    <h1>Your To-Do list</h1>
-    <!-- There is our new form action -->
-    <form method="POST" action="/lists/{{ list.id }}/add_item">
-      <input id="id_new_item" name="item_text" placeholder="Enter a to-do item">
-      {% csrf_token %}
-    </form>
-      <table id="id_list_table">
-        <!--
-        .item_set is called a reverse lookup. It's one of Django's incredible useful bits of ORM
-        that lets you look up an object's related items from a different table...
-
-        Item -> text, list
-        List -> None
-
-        list.item_set.all -> get a list of all items that "has" this list
-        -->
-        {% for item in list.item_set.all %}
-          <tr><td>{{ forloop.counter }}: {{ item.text }}</tr></td>
-        {% endfor %}
-      </table>
-  </body>
-</html>
+{% extends 'base.html' %}
+{% block header_text %}Your To-Do list{% endblock %}
+{% block form_action %}/lists/{{ list.id }}/add_item{% endblock %}
+{% block table %}
+  <table id='id_list_table' class="table">
+    {% for item in list.item_set.all %}
+      <tr><td>{{ forloop.counter }}: {{ item.text }}</td></tr>
+    {% endfor %}
+  </table>
+{% endblock %}
