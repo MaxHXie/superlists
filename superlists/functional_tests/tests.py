@@ -3,6 +3,7 @@ from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
 from selenium.common.exceptions import WebDriverException
 import time
+import os
 
 '''
 We will use a constant called MAX_WAIT to set the maximum amount of time we're prepared
@@ -14,6 +15,17 @@ MAX_WAIT = 10
 class NewVisitorTest(StaticLiveServerTestCase):
     def setUp(self):
         self.browser = webdriver.Firefox()
+        '''
+        The way I decided to do it is using an environment variable called
+        STAGING_SERVER
+        '''
+        staging_server = os.environ.get('STAGING_SERVER')
+        if staging_server:
+            '''
+            Here's the hack: we replace self.live_server_url with the address of our
+            "real server."
+            '''
+            self.live_server_url = 'http://' + staging_server
 
     def tearDown(self):
         self.browser.quit()
