@@ -6,7 +6,7 @@ class List(models.Model):
 
 class Item(models.Model):
     text = models.TextField(default='')
-    list = models.ForeignKey(List, default=None)
+    list = models.ForeignKey(List, default=None, on_delete=models.CASCADE)
 
 '''
 Deleting migrations is dangerous. We do need to do it now and again, because we don't
