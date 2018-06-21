@@ -1,182 +1,139 @@
+import os
+from datetime import datetime
+from django.conf import settings
 from django.contrib.staticfiles.testing import StaticLiveServerTestCase
 from selenium import webdriver
 from selenium.common.exceptions import WebDriverException
 from selenium.webdriver.common.keys import Keys
 import time
-import os
+
+from .server_tools import reset_database
+from .server_tools import create_session_on_server
+from .management.commands.create_session import create_pre_authenticated_session
 
 MAX_WAIT = 10
 
-#Setting LiveServerTestCase makes it run on its own database from scratch
-class NewVisitorTest(StaticLiveServerTestCase):
-    def setUp(self):
-        self.browser = webdriver.Firefox()
-        '''
-        The way I decided to do it is using an environment variable called
-        STAGING_SERVER
-        '''
-        staging_server = os.environ.get('STAGING_SERVER')
-        if staging_server:
-            '''
-            Here's the hack: we replace self.live_server_url with the address of our
-            "real server."
-            '''
-            self.live_server_url = 'http://' + staging_server
 
-    def tearDown(self):
-        self.browser.quit()
-
-    def wait_for_row_in_list_table(self, row_text):
+def wait(fn):
+    def modified_fn(*args, **kwargs):
         start_time = time.time()
         while True:
             try:
-                table = self.browser.find_element_by_id('id_list_table')
-                rows = table.find_elements_by_tag_name('tr')
-                self.assertIn(row_text, [row.text for row in rows])
-                return
+                return fn(*args, **kwargs)
             except (AssertionError, WebDriverException) as e:
                 if time.time() - start_time > MAX_WAIT:
                     raise e
                 time.sleep(0.5)
+    return modified_fn
 
-    def check_for_row_in_list_table(self, row_text):
+
+SCREEN_DUMP_LOCATION = os.path.join(
+    os.path.dirname(os.path.abspath(__file__)), 'screendumps'
+)
+
+
+class FunctionalTest(StaticLiveServerTestCase):
+
+    def setUp(self):
+        self.browser = webdriver.Firefox()
+        self.staging_server = os.environ.get('STAGING_SERVER')
+        if self.staging_server:
+            self.live_server_url = 'http://' + self.staging_server
+            reset_database(self.staging_server)
+
+
+    def tearDown(self):
+        if self._test_has_failed():
+            if not os.path.exists(SCREEN_DUMP_LOCATION):
+                os.makedirs(SCREEN_DUMP_LOCATION)
+            for ix, handle in enumerate(self.browser.window_handles):
+                self._windowid = ix
+                self.browser.switch_to_window(handle)
+                self.take_screenshot()
+                self.dump_html()
+        self.browser.quit()
+        super().tearDown()
+
+
+    def _test_has_failed(self):
+        # slightly obscure but couldn't find a better way!
+        return any(error for (method, error) in self._outcome.errors)
+
+
+    def take_screenshot(self):
+        filename = self._get_filename() + '.png'
+        print('screenshotting to', filename)
+        self.browser.get_screenshot_as_file(filename)
+
+
+    def dump_html(self):
+        filename = self._get_filename() + '.html'
+        print('dumping page HTML to', filename)
+        with open(filename, 'w') as f:
+            f.write(self.browser.page_source)
+
+
+    def _get_filename(self):
+        timestamp = datetime.now().isoformat().replace(':', '.')[:19]
+        return '{folder}/{classname}.{method}-window{windowid}-{timestamp}'.format(
+            folder=SCREEN_DUMP_LOCATION,
+            classname=self.__class__.__name__,
+            method=self._testMethodName,
+            windowid=self._windowid,
+            timestamp=timestamp
+        )
+
+
+    @wait
+    def wait_for(self, fn):
+        return fn()
+
+
+    @wait
+    def wait_for_row_in_list_table(self, row_text):
         table = self.browser.find_element_by_id('id_list_table')
         rows = table.find_elements_by_tag_name('tr')
         self.assertIn(row_text, [row.text for row in rows])
 
-    def test_can_start_a_list_for_one_user(self):
-        #Edith has heard about a cool new online to-do app. She goes
-        #to check out its homepage
-        #self.live_server_url = 'http://localhost:8000'
-        self.browser.get(self.live_server_url)
 
-        #She notices the page title and header mention to-do lists
-        self.assertIn('To-Do', self.browser.title)
-        header_text = self.browser.find_element_by_tag_name('h1').text
-        self.assertIn('To-Do', header_text)
+    def get_item_input_box(self):
+        return self.browser.find_element_by_id('id_text')
 
-        #She is invited to enter a to-do item straight away
-        inputbox = self.browser.find_element_by_id('id_new_item')
-        self.assertEqual(
-            inputbox.get_attribute('placeholder'),
-            'Enter a to-do item'
-        )
 
-        #She types "Buy peacock feathers" into a text box (Edith's hobby
-        #is tying fly-fishing lures)
-        inputbox.send_keys('Buy peacock feathers')
+    def add_list_item(self, item_text):
+        num_rows = len(self.browser.find_elements_by_css_selector('#id_list_table tr'))
+        self.get_item_input_box().send_keys(item_text)
+        self.get_item_input_box().send_keys(Keys.ENTER)
+        item_number = num_rows + 1
+        self.wait_for_row_in_list_table(f'{item_number}: {item_text}')
 
-        #When she hits enter, the page updates, and now the page lists
-        #"1: Buy peacock feathers" as an item in a to-do list table
-        inputbox.send_keys(Keys.ENTER)
-        self.wait_for_row_in_list_table("1: Buy peacock feathers")
 
-        #There is still a text box inviting her to add another item. She
-        #enters "Use peacock feathers to make a fly" (Edith is very
-        #methodological)
+    @wait
+    def wait_to_be_logged_in(self, email):
+        self.browser.find_element_by_link_text('Log out')
+        navbar = self.browser.find_element_by_css_selector('.navbar')
+        self.assertIn(email, navbar.text)
 
-        inputbox = self.browser.find_element_by_id('id_new_item')
-        inputbox.send_keys("Use peacock feathers to make a fly")
-        inputbox.send_keys(Keys.ENTER)
 
-        #The page updates again, and now shows both items on her list
-        self.wait_for_row_in_list_table("1: Buy peacock feathers")
-        self.wait_for_row_in_list_table("2: Use peacock feathers to make a fly")
+    @wait
+    def wait_to_be_logged_out(self, email):
+        self.browser.find_element_by_name('email')
+        navbar = self.browser.find_element_by_css_selector('.navbar')
+        self.assertNotIn(email, navbar.text)
 
-        #Satisfied, the goes back to sleep
 
-    def test_multiple_users_can_start_lists_at_different_urls(self):
-        #Edith starts a new to-do list
-        self.browser.get(self.live_server_url)
-        inputbox = self.browser.find_element_by_id('id_new_item')
-        inputbox.send_keys('Buy peacock feathers')
-        inputbox.send_keys(Keys.ENTER)
-        self.wait_for_row_in_list_table('1: Buy peacock feathers')
+    def create_pre_authenticated_session(self, email):
+        if self.staging_server:
+            session_key = create_session_on_server(self.staging_server, email)
+        else:
+            session_key = create_pre_authenticated_session(email)
 
-        #She notices that her list has a unique URL
-        edith_list_url = self.browser.current_url
-        #assertRegex is a helper function from unittest that checks whther a string
-        #matches a regular expression. We use it to check that our new REST-ish design
-        #has been implemented. Find our more in the unittest documentation.
-        self.assertRegex(edith_list_url, '/lists/.+')
+        ## to set a cookie we need to first visit the domain.
+        ## 404 pages load the quickest!
+        self.browser.get(self.live_server_url + "/404_no_such_url/")
+        self.browser.add_cookie(dict(
+            name=settings.SESSION_COOKIE_NAME,
+            value=session_key,
+            path='/',
+        ))
 
-        #Next we imagine a new user coming along. We want to check that they don't see
-        #any of Edith's items when they visit the home page, and that they get their own unique
-        #URL for their list:
-
-        #Now a new user, Francis, comes along to the site.
-
-        '''
-        I am using the convention of double hashes (##) to indicate "meta-comments" -
-        comments about how the test is working and why - so that we can distinguich them
-        from regular comments in FTs which explain the User Story. They're a message to our
-        future selves, which might otherwise be wondering why the heck we're quitting the browser
-        and starting a new one...
-        '''
-
-        ##We use a new browser to make sure that no information
-        ##of Edith's is coming through from cookies etc
-        self.browser.quit()
-        self.browser = webdriver.Firefox()
-
-        #Francis visits the home page. There is no sign of Edith's list
-        self.browser.get(self.live_server_url)
-        page_text = self.browser.find_element_by_tag_name('body').text
-        self.assertNotIn("Buy peacock feathers", page_text)
-        self.assertNotIn("make a fly", page_text)
-
-        #Francis starts a new list by entering a new item. He is less interesting than Edith...
-        inputbox = self.browser.find_element_by_id('id_new_item')
-        inputbox.send_keys("Buy milk")
-        inputbox.send_keys(Keys.ENTER)
-        self.wait_for_row_in_list_table('1: Buy milk')
-
-        #Francis gets his own unique URL
-        francis_list_url = self.browser.current_url
-        self.assertRegex(francis_list_url, '/lists/.+')
-        self.assertNotEqual(francis_list_url, edith_list_url)
-
-        #Again, there is on trace of Edith's list
-        page_text = self.browser.find_element_by_tag_name('body').text
-        self.assertNotIn('Buy peacock feathers', page_text)
-        self.assertIn('Buy milk', page_text)
-
-        #Satisfied, they both fo to sleep
-
-    def test_layout_and_styling(self):
-        #Edith goes to the home page
-        self.browser.get(self.live_server_url)
-        self.browser.set_window_size(1024, 768)
-
-        #She notices tha input box is nice and centered
-        inputbox = self.browser.find_element_by_id('id_new_item')
-        self.assertAlmostEqual(
-            inputbox.location['x'] + inputbox.size['width'] / 2,
-            512,
-            delta=10
-        )
-
-        #She starts a new list and sees the input is nicely
-        #centered there too
-        inputbox.send_keys('testing')
-        inputbox.send_keys(Keys.ENTER)
-        self.wait_for_row_in_list_table('1: testing')
-        inputbox = self.browser.find_element_by_id('id_new_item')
-        self.assertAlmostEqual(
-            inputbox.location['x'] + inputbox.size['width'] / 2,
-            512,
-            delta=10
-        )
-
-'''
-Where are we with our own to-do list?
-    - Adjust model so that items are associated with different lists.
-    - Add unique URLS for each list...
-    - Add a URL for creating a new list via POST
-    - Add URLs for adding a new item to an existing list via POST
-    - Last step until we get an MVP
-'''
-
-# I used a relative import (from .base). Some people like to use them a lot in Django
-# code (e.g., your views might import models using from .models import list, instead
-# of from list.models) Relative import is a really good thing.
