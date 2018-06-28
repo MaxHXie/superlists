@@ -9,7 +9,7 @@ from .base import FunctionalTest
 
 
 SUBJECT = 'Your login link for Superlists'
-
+TEST_EMAIL = 'edith@example.com'
 
 class LoginTest(FunctionalTest):
 
@@ -77,11 +77,19 @@ class LoginTest(FunctionalTest):
         # she clicks it
         self.browser.get(url)
 
-        # she is logged in!
-        self.wait_to_be_logged_in(email=test_email)
+        # She is logged in!
+        self.wait_for(
+            lambda: self.browser.find_element_by_link_text('Log out')
+        )
+        navbar = self.browser.find_element_by_css_selector('.navbar')
+        self.assertIn(TEST_EMAIL, navbar.text)
 
         # Now she logs out
         self.browser.find_element_by_link_text('Log out').click()
 
         # She is logged out
-        #self.wait_to_be_logged_out(email=test_email)
+        self.wait_for(
+            lambda: self.browser.find_element_by_name('email')
+        )
+        navbar = self.browser.find_element_by_css_selector('.navbar')
+        self.assertNotIn(TEST_EMAIL, navbar.text)
