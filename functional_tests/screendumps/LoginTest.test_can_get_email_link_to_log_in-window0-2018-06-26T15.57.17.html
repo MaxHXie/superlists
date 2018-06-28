@@ -1,7 +1,4 @@
-<!DOCTYPE html>
-<html lang="en">
-
-  <head>
+<html lang="en"><head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -15,53 +12,42 @@
       <nav class="navbar navbar-default" role="navigation">
         <div class="container-fluid">
           <a class="navbar-brand" href="/">Superlists</a>
-          {% if user.email %}
-            <ul>
-              <li>Logged in as {{ user.email }}</li>
-              <li><a href="#">Log out</a></li>
-            </ul>
-          {% else %}
-          <form class="navbar-form navbar-right" method="POST" action="{% url 'send_login_email' %}">
+          <form class="navbar-form navbar-right" method="POST" action="/accounts/send_login_email">
             <span>Enter email to log in:</span>
             <input class="form-control" name="email" type="text">
-            {% csrf_token %}
+            <input name="csrfmiddlewaretoken" value="UxFh1wgBLZ87bsFgaW2pygoDFqDGg6aTCTTeci7PERmEtPyyjibzSrqpBWvv1S02" type="hidden">
           </form>
-          {% endif %}
         </div>
       </nav>
 
-      {% if messages %}
+      
         <div class="row">
           <div class="col-md-8">
-            {% for message in messages %}
-              {% if message.level_tag == 'success' %}
-                <div class="alert alert-success">{{ message }}</div>
-              {% else %}
-                <div class="alert alert-warning">{{ message }}</div>
-              {% endif %}
-            {% endfor %}
+            
+              
+                <div class="alert alert-success">Check your email, we have sent you a link you can use to log in.</div>
+              
+            
           </div>
         </div>
-      {% endif %}
+      
 
       <div class="row">
         <div class="col-md-6 col-md-offset-3 jumbotron">
           <div class="text-center">
-            <h1>{% block header_text %}{% endblock %}</h1>
+            <h1>Start a new To-Do list</h1>
 
-            {% block list_form %}
-              <form id="id_item_form" method="POST" action="{% block form_action %}{% endblock %}">
-                {{ form.text }}
-                {% csrf_token %}
+            
+              <form id="id_item_form" method="POST" action="/lists/new">
+                <input name="text" placeholder="Enter a to-do item" class="form-control input-lg" required="" id="id_text" type="text">
+                <input name="csrfmiddlewaretoken" value="UxFh1wgBLZ87bsFgaW2pygoDFqDGg6aTCTTeci7PERmEtPyyjibzSrqpBWvv1S02" type="hidden">
                 <div class="form-group has-error">
                   <div class="help-block">
-                    {% if form.errors %}
-                      {{ form.text.errors }}
-                    {% endif %}
+                    
                   </div>
                 </div>
               </form>
-            {% endblock %}
+            
 
           </div>
         </div>
@@ -69,28 +55,29 @@
 
       <div class="row">
         <div class="col-md-6 col-md-offset-3">
-          {% block table %}
-          {% endblock %}
+          
+          
         </div>
       </div>
 
       <div class="row">
         <div class="col-md-6 col-md-offset-3">
-          {% block extra_content %}
-          {% endblock %}
+          
+          
         </div>
       </div>
     </div>
     <script src="/static/jquery-3.1.1.min.js"></script>
     <script src="/static/list.js"></script>
 
-    {% block scripts %}
+    
       <script>
 $(document).ready(function () {
   window.Superlists.initialize();
 });
       </script>
-    {% endblock scripts %}
+    
 
-  </body>
-</html>
+  
+
+</body></html>
