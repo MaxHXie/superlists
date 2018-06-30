@@ -16,8 +16,11 @@
         <div class="container-fluid">
           <a class="navbar-brand" href="/">Superlists</a>
           {% if user.email %}
-            <ul>
-              <li>Logged in as {{ user.email }}</li>
+            <ul class="nav navbar-nav navbar-left">
+              <li><a href="{% url 'my_lists' user.email %}">My lists</a></li>
+            </ul>
+            <ul class="nav navbar-nav navbar-right">
+              <li class="navbar-text">Logged in as {{ user.email }}</li>
               <li><a href="{% url 'logout' %}">Log out</a></li>
             </ul>
           {% else %}
@@ -48,11 +51,11 @@
         <div class="col-md-6 col-md-offset-3 jumbotron">
           <div class="text-center">
             <h1>{% block header_text %}{% endblock %}</h1>
-
             {% block list_form %}
               <form id="id_item_form" method="POST" action="{% block form_action %}{% endblock %}">
                 {{ form.text }}
                 {% csrf_token %}
+                {% if form.errors %}
                 <div class="form-group has-error">
                   <div class="help-block">
                     {% if form.errors %}
@@ -60,9 +63,9 @@
                     {% endif %}
                   </div>
                 </div>
+                {% endif %}
               </form>
             {% endblock %}
-
           </div>
         </div>
       </div>

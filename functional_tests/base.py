@@ -2,6 +2,7 @@ import os
 from datetime import datetime
 from django.conf import settings
 from django.contrib.staticfiles.testing import StaticLiveServerTestCase
+from .server_tools import reset_database
 from selenium import webdriver
 from selenium.common.exceptions import WebDriverException
 from selenium.webdriver.common.keys import Keys
@@ -13,7 +14,7 @@ from .management.commands.create_session import create_pre_authenticated_session
 
 MAX_WAIT = 10
 
-
+# A decorator is a way of modifying a function; it takes a function as an argument...
 def wait(fn):
     def modified_fn(*args, **kwargs):
         start_time = time.time()
@@ -24,13 +25,20 @@ def wait(fn):
                 if time.time() - start_time > MAX_WAIT:
                     raise e
                 time.sleep(0.5)
+    # and returns another function as the modified (or "decorated") version.
     return modified_fn
-
 
 SCREEN_DUMP_LOCATION = os.path.join(
     os.path.dirname(os.path.abspath(__file__)), 'screendumps'
 )
 
+"""
+Decorators:
+    Take a function as an argument and modify its context however you like.
+    In this case we embed that function within code that makes it wait before launching.
+
+    Using *args and **kwargs we specify that
+"""
 
 class FunctionalTest(StaticLiveServerTestCase):
 
@@ -107,20 +115,17 @@ class FunctionalTest(StaticLiveServerTestCase):
         item_number = num_rows + 1
         self.wait_for_row_in_list_table(f'{item_number}: {item_text}')
 
-
     @wait
     def wait_to_be_logged_in(self, email):
         self.browser.find_element_by_link_text('Log out')
         navbar = self.browser.find_element_by_css_selector('.navbar')
         self.assertIn(email, navbar.text)
 
-
     @wait
     def wait_to_be_logged_out(self, email):
         self.browser.find_element_by_name('email')
         navbar = self.browser.find_element_by_css_selector('.navbar')
         self.assertNotIn(email, navbar.text)
-
 
     def create_pre_authenticated_session(self, email):
         if self.staging_server:
@@ -136,4 +141,3 @@ class FunctionalTest(StaticLiveServerTestCase):
             value=session_key,
             path='/',
         ))
-

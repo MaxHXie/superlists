@@ -1,0 +1,108 @@
+<html lang="en"><head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>To-Do lists</title>
+    <link href="/static/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/static/base.css" rel="stylesheet">
+  </head>
+
+  <body>
+    <div class="container">
+      <nav class="navbar navbar-default" role="navigation">
+        <div class="container-fluid">
+          <a class="navbar-brand" href="/">Superlists</a>
+          
+            <ul class="nav navbar-nav navbar-left">
+              <li><a href="#">My lists</a></li>
+            </ul>
+            <ul class="nav navbar-nav navbar-right">
+              <li class="navbar-text">Logged in as edith@example.com</li>
+              <li><a href="/accounts/logout">Log out</a></li>
+            </ul>
+          
+        </div>
+      </nav>
+
+      
+
+      <div class="row">
+        <div class="col-md-6 col-md-offset-3 jumbotron">
+          <div class="text-center">
+            <h1>Your To-Do list</h1>
+
+            
+              <form id="id_item_form" method="POST" action="">
+                <input name="text" placeholder="Enter a to-do item" class="form-control input-lg" required="" id="id_text" type="text">
+                <input name="csrfmiddlewaretoken" value="ucBkl1Fw620ev0rsaP2YIuxROTl1mnZfBhHOmvj3t7gxHiiemuJJYYmvJEpWHqqo" type="hidden">
+                <div class="form-group has-error">
+                  <div class="help-block">
+                    
+                  </div>
+                </div>
+              </form>
+            
+
+          </div>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col-md-6 col-md-offset-3">
+          
+  <table id="id_list_table" class="table">
+  </table>
+
+  
+    <p>List owner: <span id="id_list_owner">edith@example.com</span></p><p>
+  
+
+        </p></div>
+      </div>
+
+      <div class="row">
+        <div class="col-md-6 col-md-offset-3">
+          
+  <div class="row">
+
+    <div class="col-md-6">
+      <h3>Shared with</h3>
+      <ul>
+        
+      </ul>
+    </div>
+
+    <div class="col-md-3">
+      <h3>Share this list:</h3>
+      <form class="form-inline" method="POST" action="/lists/1/share">
+        <input name="csrfmiddlewaretoken" value="ucBkl1Fw620ev0rsaP2YIuxROTl1mnZfBhHOmvj3t7gxHiiemuJJYYmvJEpWHqqo" type="hidden">
+        <input name="sharee" placeholder="your-friend@example.com">
+      </form>
+        <h3>Shared with</h3>
+        <ul>
+            
+        </ul>
+    </div>
+  </div>
+
+        </div>
+      </div>
+    </div>
+    <script src="/static/jquery-3.1.1.min.js"></script>
+    <script src="/static/list.js"></script>
+
+    
+  <script>
+$(document).ready(function () {
+  window.Superlists.initialize({
+    listApiUrl: "/api/lists/1/",
+    itemsApiUrl: "/api/items/",
+    listId: 1,
+  });
+});
+  </script>
+
+
+  
+
+</body></html>
