@@ -12,29 +12,18 @@
 {% endblock %}
 
 {% block extra_content %}
-  <div class="row">
-
+  <div class=row>
     <div class="col-md-6">
-      <h3>Shared with</h3>
+      <form method="POST" action="{% url 'share_list' list.id %}">
+        <input class="form-control" type="text" name="sharee" placeholder="your-friend@example.com">
+        {% csrf_token %}
+      </form>
       <ul>
+        <li class="list-sharee">List owner: <strong>{{ list.owner.email }}</strong></li>
         {% for sharee in list.shared_with.all %}
           <li class="list-sharee">{{ sharee.email }}</li>
         {% endfor %}
-      </ul>
-    </div>
-
-    <div class="col-md-3">
-      <h3>Share this list:</h3>
-      <form class="form-inline" method="POST" action="{% url 'share_list' list.id %}" >
-        {% csrf_token %}
-        <input name="sharee" placeholder="your-friend@example.com" />
-      </form>
-        <h3>Shared with</h3>
-        <ul>
-            {% for sharee in list.shared_with.all %}
-              <li class="list-sharee">{{ sharee.email }}</li>
-            {% endfor %}
-        </ul>
+      </uL>
     </div>
   </div>
 {% endblock %}
@@ -50,4 +39,3 @@ $(document).ready(function () {
 });
   </script>
 {% endblock scripts %}
-

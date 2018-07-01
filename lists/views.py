@@ -33,5 +33,9 @@ def my_lists(request, email):
 
 def share_list(request, list_id):
     list_ = List.objects.get(id=list_id)
-    list_.shared_with.add(request.POST['sharee'])
+    try:
+        user = User.objects.get(email=request.POST['sharee'])
+    except User.DoesNotExist:
+        user = User.objects.create(email=request.POST['sharee'])
+    list_.shared_with.add(user)
     return redirect(list_)

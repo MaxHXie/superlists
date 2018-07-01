@@ -5,6 +5,7 @@
 {% block list_form %}{% endblock list_form %}
 
 {% block extra_content %}
+  <h1>My Lists</h1>
   <h2>{{ owner.email }}'s lists</h2>
   <ul>
     {% for list in owner.list_set.all %}
